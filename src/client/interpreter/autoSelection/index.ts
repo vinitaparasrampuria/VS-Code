@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
@@ -115,7 +116,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         if (workspaceFileState && workspaceFile) {
             // Choose environments immediately under the workspace file directory, but make sure they do not belong to any workspace folder.
             const workspaceInterpreters = interpreters.filter(
-                (item) => !item.workspaceFolder && isParentPath(item.path, workspaceFile.fsPath),
+                (item) => !item.workspaceFolder && isParentPath(item.path, path.dirname(workspaceFile.fsPath)),
             );
             const recommendedInterpreter = this.envTypeComparer.getRecommended(workspaceInterpreters, undefined);
             if (recommendedInterpreter) {
