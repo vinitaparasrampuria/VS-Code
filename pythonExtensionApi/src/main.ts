@@ -39,8 +39,12 @@ export interface PythonExtension {
         /**
          * Returns the environment configured by user in settings. Note that this can be an invalid environment, use
          * {@link resolveEnvironment} to get full details.
-         * @param resource : Uri of a file or workspace folder. This is used to determine the env in a multi-root
-         * scenario. If `undefined`, then the API returns what ever is set for the workspace.
+         * @param resource : Uri of a file or workspace folder, which used to determine the env in a multi-root
+         * scenario.
+         *
+         * If `undefined`, then the API returns what ever is set for the workspace. For multi-root workspace, this
+         * ignores all environments within the workspace folder, and returns configured environment at workspace
+         * level.
          */
         getActiveEnvironmentPath(resource?: Resource): EnvironmentPath;
         /**

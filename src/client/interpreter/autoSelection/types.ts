@@ -23,6 +23,7 @@ export interface IInterpreterAutoSelectionProxyService {
     getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
     registerInstance?(instance: IInterpreterAutoSelectionProxyService): void;
     setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void>;
+    getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined;
 }
 
 export const IInterpreterAutoSelectionService = Symbol('IInterpreterAutoSelectionService');
@@ -30,6 +31,7 @@ export interface IInterpreterAutoSelectionService extends IInterpreterAutoSelect
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     autoSelectInterpreter(resource: Resource): Promise<void>;
     getAutoSelectedInterpreter(resource: Resource): PythonEnvironment | undefined;
+    getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined;
     setGlobalInterpreter(interpreter: PythonEnvironment | undefined): Promise<void>;
 }
 

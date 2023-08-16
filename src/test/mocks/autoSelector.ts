@@ -38,6 +38,11 @@ export class MockAutoSelectionService
         return undefined;
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    public getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined {
+        return undefined;
+    }
+
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
     public registerInstance(_instance: IInterpreterAutoSelectionProxyService): void {}
 }

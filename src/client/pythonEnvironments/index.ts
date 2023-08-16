@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { cloneDeep } from 'lodash';
@@ -142,6 +143,10 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>
         new GlobalVirtualEnvironmentLocator(),
         new CustomVirtualEnvironmentLocator(),
     );
+
+    if (vscode.workspace.workspaceFile) {
+        locators.push(new WorkspaceVirtualEnvironmentLocator(path.dirname(vscode.workspace.workspaceFile.fsPath), 1));
+    }
 
     if (getOSType() === OSType.Windows) {
         locators.push(

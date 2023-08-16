@@ -25,6 +25,11 @@ suite('Interpreters - Auto Selection Proxy', () => {
         }
 
         // eslint-disable-next-line class-methods-use-this
+        public getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined {
+            return undefined;
+        }
+
+        // eslint-disable-next-line class-methods-use-this
         public async setWorkspaceInterpreter(): Promise<void> {
             return Promise.resolve();
         }

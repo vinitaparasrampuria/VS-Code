@@ -29,6 +29,10 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
             return undefined;
         }
 
+        public getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined {
+            return undefined;
+        }
+
         public async setWorkspaceInterpreter(
             _resource: Uri,
             _interpreter: PythonEnvironment | undefined,

@@ -76,6 +76,7 @@ function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     env.displayName = info.display;
     env.detailedDisplayName = info.detailedDisplayName;
     env.type = info.type;
+    env.workspaceFolder = info.searchLocation?.fsPath;
     // We do not worry about using distro.defaultDisplayName.
 
     return env;

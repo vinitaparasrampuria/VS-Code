@@ -17,6 +17,7 @@ import { EventName } from '../../telemetry/constants';
 import { IInterpreterComparer } from '../configuration/types';
 import { IInterpreterHelper, IInterpreterService } from '../contracts';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService } from './types';
+import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
 const workspacePathNameForGlobalWorkspaces = '';
@@ -92,11 +93,35 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             return this.autoSelectedInterpreterByWorkspace.get(workspaceFolderPath);
         }
 
+        return this.getAutoSelectedInterpreterForWorkspaceFile();
+    }
+
+    public getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined {
+        // Look into global scope and workspace file scope only, do not look into workspace folder scope.
+        const workspaceFileState = this.getWorkspaceFileState();
+        if (workspaceFileState && workspaceFileState.value) {
+            return workspaceFileState.value;
+        }
         return this.globallyPreferredInterpreter.value;
     }
 
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void> {
         await this.storeAutoSelectedInterpreter(resource, interpreter);
+    }
+
+    private async setWorkspaceFileInterpreter(interpreters: PythonEnvironment[]): Promise<void> {
+        const { workspaceFile } = this.workspaceService;
+        const workspaceFileState = this.getWorkspaceFileState();
+        if (workspaceFileState && workspaceFile) {
+            // Choose environments immediately under the workspace file directory, but make sure they do not belong to any workspace folder.
+            const workspaceInterpreters = interpreters.filter(
+                (item) => !item.workspaceFolder && isParentPath(item.path, workspaceFile.fsPath),
+            );
+            const recommendedInterpreter = this.envTypeComparer.getRecommended(workspaceInterpreters, undefined);
+            if (recommendedInterpreter) {
+                await workspaceFileState.updateValue(recommendedInterpreter);
+            }
+        }
     }
 
     public async setGlobalInterpreter(interpreter: PythonEnvironment): Promise<void> {
@@ -175,6 +200,14 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return undefined;
     }
 
+    private getWorkspaceFileState(): undefined | IPersistentState<PythonEnvironment | undefined> {
+        if (this.workspaceService.workspaceFile) {
+            const key = `autoSelectedWorkspacePythonInterpreter-${this.workspaceService.workspaceFile.fsPath}`;
+            return this.stateFactory.createWorkspacePersistentState(key, undefined);
+        }
+        return undefined;
+    }
+
     private getAutoSelectionInterpretersQueryState(resource: Resource): IPersistentState<boolean | undefined> {
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         const key = `autoSelectionInterpretersQueried-${workspaceUri?.folderUri.fsPath || 'global'}`;
@@ -204,6 +237,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         const interpreters = this.interpreterService.getInterpreters(resource);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
+        await this.setWorkspaceFileInterpreter(interpreters);
         const recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
         if (!recommendedInterpreter) {
             return;

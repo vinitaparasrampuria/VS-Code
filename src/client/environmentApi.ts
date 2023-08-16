@@ -32,6 +32,8 @@ import {
     Resource,
 } from './api/types';
 import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
+import { IWorkspaceService } from './common/application/types';
+import { IInterpreterAutoSelectionProxyService } from './interpreter/autoSelection/types';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -120,6 +122,10 @@ export function buildEnvironmentApi(
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const autoSelection = serviceContainer.get<IInterpreterAutoSelectionProxyService>(
+        IInterpreterAutoSelectionProxyService,
+    );
     function sendApiTelemetry(apiName: string, args?: unknown) {
         extensions
             .determineExtensionFromCallStack()
@@ -192,8 +198,19 @@ export function buildEnvironmentApi(
         },
         getActiveEnvironmentPath(resource?: Resource) {
             sendApiTelemetry('getActiveEnvironmentPath');
-            resource = resource && 'uri' in resource ? resource.uri : resource;
-            const path = configService.getSettings(resource).pythonPath;
+            let path: string;
+            if (!resource && workspaceService.workspaceFile) {
+                const settings = interpreterPathService.inspect(undefined);
+                const workspaceConfiguredInterpreter = settings.workspaceValue || settings.globalValue;
+                if (workspaceConfiguredInterpreter && workspaceConfiguredInterpreter !== 'python') {
+                    path = workspaceConfiguredInterpreter;
+                } else {
+                    path = autoSelection.getAutoSelectedInterpreterForWorkspaceFile()?.path || 'python';
+                }
+            } else {
+                resource = resource && 'uri' in resource ? resource.uri : resource;
+                path = configService.getSettings(resource).pythonPath;
+            }
             const id = path === 'python' ? 'DEFAULT_PYTHON' : getEnvID(path);
             return {
                 id,

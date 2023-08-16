@@ -53,7 +53,7 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
     public readonly providerId: string = 'workspaceVirtualEnvLocator';
 
-    public constructor(private readonly root: string) {
+    public constructor(private readonly root: string, private readonly searchDepth?: number) {
         super(
             () => getWorkspaceVirtualEnvDirs(this.root),
             getVirtualEnvKind,
@@ -67,13 +67,16 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+        // Number of levels of sub-directories to recurse when looking for
+        // interpreters
+        const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
         async function* iterator(root: string) {
             const envRootDirs = await getWorkspaceVirtualEnvDirs(root);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for workspace virtual envs in: ${envRootDir}`);
 
-                    const executables = findInterpretersInDir(envRootDir, DEFAULT_SEARCH_DEPTH);
+                    const executables = findInterpretersInDir(envRootDir, searchDepth);
 
                     for await (const entry of executables) {
                         const { filename } = entry;

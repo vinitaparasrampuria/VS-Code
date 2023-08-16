@@ -53,7 +53,7 @@ export enum ModuleInstallerType {
  * @prop sysVersion - the raw value of `sys.version`
  * @prop architecture - of the host CPU (e.g. `x86`)
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
- * @prop pipEnvWorkspaceFolder - the pipenv root, if applicable
+ * @prop workspaceFolder - the workspaceFolder root, if applicable
  */
 export type InterpreterInformation = {
     path: string;
@@ -61,7 +61,7 @@ export type InterpreterInformation = {
     sysVersion?: string;
     architecture: Architecture;
     sysPrefix: string;
-    pipEnvWorkspaceFolder?: string;
+    workspaceFolder?: string;
 };
 
 /**

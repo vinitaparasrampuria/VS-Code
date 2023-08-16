@@ -32,6 +32,10 @@ export class InterpreterAutoSelectionProxyService implements IInterpreterAutoSel
         return this.instance ? this.instance.getAutoSelectedInterpreter(resource) : undefined;
     }
 
+    public getAutoSelectedInterpreterForWorkspaceFile(): PythonEnvironment | undefined {
+        return this.instance ? this.instance.getAutoSelectedInterpreterForWorkspaceFile() : undefined;
+    }
+
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonEnvironment | undefined): Promise<void> {
         return this.instance ? this.instance.setWorkspaceInterpreter(resource, interpreter) : undefined;
     }
