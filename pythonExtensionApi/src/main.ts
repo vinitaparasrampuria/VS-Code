@@ -43,8 +43,8 @@ export interface PythonExtension {
          * scenario.
          *
          * If `undefined`, then the API returns what ever is set for the workspace. For multi-root workspace, this
-         * ignores all environments within the workspace folder, and returns configured environment at workspace
-         * level.
+         * returns configured environment at workspace level. Configurations at the workspace folder level are
+         * ignored.
          */
         getActiveEnvironmentPath(resource?: Resource): EnvironmentPath;
         /**
