@@ -4,9 +4,8 @@ import { Worker } from 'worker_threads';
 import { PythonEnvInfo } from '../../info';
 import {
     EnvIteratorId,
-    IEnvsMiddleware,
     IPythonEnvsIterator,
-    IResolvingLocator,
+    IWorkerMiddleWare,
     ProgressNotificationEvent,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
@@ -16,7 +15,7 @@ import { PythonEnvsWatcher } from '../../watcher';
 /**
  * A service acts as a bridge between Env Resolver and Env Collection.
  */
-export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IEnvsMiddleware {
+export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IWorkerMiddleWare {
     private idCount = 0;
 
     private worker: Worker;

@@ -196,11 +196,20 @@ interface IResolver {
 export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ICompositeLocator<I> {}
 
 export type EnvIteratorId = number;
-export interface IEnvsMiddleware {
+
+export interface IMiddleware {
     iterInitialize(query?: PythonLocatorQuery): Promise<EnvIteratorId>;
     iterNext(id: EnvIteratorId): Promise<PythonEnvInfo | undefined>;
-    iterOnUpdated(id: EnvIteratorId): Event<PythonEnvUpdatedEvent | ProgressNotificationEvent> | undefined;
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
+}
+
+export interface IEnvsMiddleware extends IMiddleware {
+    iterOnUpdated(id: EnvIteratorId): Event<PythonEnvUpdatedEvent | ProgressNotificationEvent> | undefined;
+    readonly onChanged: Event<PythonEnvsChangedEvent>;
+}
+
+export interface IWorkerMiddleWare extends IMiddleware {
+    iterOnUpdated(id: EnvIteratorId): Event<PythonEnvUpdatedEvent | ProgressNotificationEvent> | undefined;
     readonly onChanged: Event<PythonEnvsChangedEvent>;
 }
 
