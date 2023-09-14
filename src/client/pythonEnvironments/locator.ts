@@ -8,7 +8,7 @@ import { PythonEnvsReducer } from './base/locators/composite/envsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/envsResolver';
 import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
 import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
-import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/wrappers';
+import { ExtensionLocators, WorkspaceLocators } from './base/locators/wrappers';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
 import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
@@ -24,13 +24,20 @@ import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator'
 /**
  * Get the locator to use in the component.
  */
-export function createSubLocators(): { locator: IResolvingLocator; disposables: IDisposableRegistry } {
+export function createSubLocators(
+    folders: readonly vscode.WorkspaceFolder[] | undefined,
+): {
+    locator: IResolvingLocator;
+    disposables: IDisposableRegistry;
+    workspaceLocator: WorkspaceLocators;
+} {
     const disposables: IDisposableRegistry = [];
     // Create the low-level locators.
+    const workspaceLocator = createWorkspaceLocator(folders, disposables);
     const locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
         // Here we pull the locators together.
         createNonWorkspaceLocators(disposables),
-        createWorkspaceLocator(disposables),
+        workspaceLocator,
     );
 
     // Create the env info service used by ResolvingLocator and CachingLocator.
@@ -43,7 +50,7 @@ export function createSubLocators(): { locator: IResolvingLocator; disposables: 
         // These are shared.
         envInfoService,
     );
-    return { locator: resolvingLocator, disposables };
+    return { locator: resolvingLocator, disposables, workspaceLocator };
 }
 
 function createNonWorkspaceLocators(disposables: IDisposableRegistry): ILocator<BasicEnvInfo>[] {
@@ -76,26 +83,11 @@ function createNonWorkspaceLocators(disposables: IDisposableRegistry): ILocator<
     return locators;
 }
 
-function watchRoots(args: WatchRootsArgs): IDisposable {
-    const { initRoot, addRoot, removeRoot } = args;
-
-    const folders = vscode.workspace.workspaceFolders;
-    if (folders) {
-        folders.map((f) => f.uri).forEach(initRoot);
-    }
-
-    return vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-        for (const root of event.removed) {
-            removeRoot(root.uri);
-        }
-        for (const root of event.added) {
-            addRoot(root.uri);
-        }
-    });
-}
-
-function createWorkspaceLocator(disposables: IDisposableRegistry): WorkspaceLocators {
-    const locators = new WorkspaceLocators(watchRoots, [
+function createWorkspaceLocator(
+    folders: readonly vscode.WorkspaceFolder[] | undefined,
+    disposables: IDisposableRegistry,
+): WorkspaceLocators {
+    const locators = new WorkspaceLocators(folders, [
         (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
     ]);

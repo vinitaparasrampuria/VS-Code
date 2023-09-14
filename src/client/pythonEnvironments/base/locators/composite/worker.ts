@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable no-restricted-globals */
-import { parentPort } from 'worker_threads';
+import { parentPort, workerData } from 'worker_threads';
 import { EnvsMiddleWare } from './envsMiddleware';
 
-const envsMiddleware = new EnvsMiddleWare();
+const folders = workerData;
+const envsMiddleware = new EnvsMiddleWare(folders);
 
 if (!parentPort) {
     throw new Error('Not in a worker thread');

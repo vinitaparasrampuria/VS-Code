@@ -91,7 +91,10 @@ async function createLocator(
     ext: ExtensionState,
     // This is shared.
 ): Promise<IDiscoveryAPI> {
-    const middleware = new EnvsMiddleWare();
+    const middleware = new EnvsMiddleWare(vscode.workspace.workspaceFolders);
+    ext.disposables.push(
+        vscode.workspace.onDidChangeWorkspaceFolders((event) => middleware.onDidChangeWorkspaceFolders(event)),
+    );
     ext.disposables.push(middleware);
     const caching = new EnvsCollectionService(await createCollectionCache(ext), middleware);
     return caching;

@@ -1,4 +1,7 @@
-import { Event } from 'vscode';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { Event, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { PythonEnvInfo } from '../../info';
 import {
     EnvIteratorId,
@@ -12,6 +15,7 @@ import {
 import { PythonEnvsWatcher } from '../../watcher';
 import { createSubLocators } from '../../../locator';
 import { IDisposableRegistry } from '../../../../common/types';
+import { WorkspaceLocators } from '../wrappers';
 
 /**
  * A service acts as a bridge between Env Resolver and Env Collection.
@@ -21,15 +25,18 @@ export class EnvsMiddleWare extends PythonEnvsWatcher implements IEnvsMiddleware
 
     private readonly locator: IResolvingLocator;
 
+    private readonly workspaceLocator: WorkspaceLocators;
+
     private disposables: IDisposableRegistry;
 
     private iterators = new Map<EnvIteratorId, IPythonEnvsIterator>();
 
-    constructor() {
+    constructor(folders: readonly WorkspaceFolder[] | undefined) {
         super();
-        const { locator, disposables } = createSubLocators();
+        const { locator, disposables, workspaceLocator } = createSubLocators(folders);
         this.disposables = disposables;
         this.locator = locator;
+        this.workspaceLocator = workspaceLocator;
         this.locator.onChanged((e) => {
             this.fire(e);
         });
@@ -37,6 +44,10 @@ export class EnvsMiddleWare extends PythonEnvsWatcher implements IEnvsMiddleware
 
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
+    }
+
+    public onDidChangeWorkspaceFolders(event: WorkspaceFoldersChangeEvent): void {
+        this.workspaceLocator.onDidChangeWorkspaceFolders(event);
     }
 
     public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {

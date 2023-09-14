@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 // eslint-disable-next-line max-classes-per-file
-import { Uri } from 'vscode';
+import { Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
@@ -42,13 +42,6 @@ type WorkspaceLocatorFactoryResult = ILocator<BasicEnvInfo> & Partial<IDisposabl
 type WorkspaceLocatorFactory = (root: Uri) => WorkspaceLocatorFactoryResult[];
 type RootURI = string;
 
-export type WatchRootsArgs = {
-    initRoot(root: Uri): void;
-    addRoot(root: Uri): void;
-    removeRoot(root: Uri): void;
-};
-type WatchRootsFunc = (args: WatchRootsArgs) => IDisposable;
-// XXX Factor out RootedLocators and MultiRootedLocators.
 /**
  * The collection of all workspace-specific locators used by the extension.
  *
@@ -62,7 +55,24 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
 
     private readonly roots: Record<RootURI, Uri> = {};
 
-    constructor(private readonly watchRoots: WatchRootsFunc, private readonly factories: WorkspaceLocatorFactory[]) {
+    private watchArgs = {
+        initRoot: (root: Uri) => this.addRoot(root),
+        addRoot: (root: Uri) => {
+            // Drop the old one, if necessary.
+            this.removeRoot(root);
+            this.addRoot(root);
+            this.emitter.fire({ searchLocation: root });
+        },
+        removeRoot: (root: Uri) => {
+            this.removeRoot(root);
+            this.emitter.fire({ searchLocation: root });
+        },
+    };
+
+    constructor(
+        private readonly folders: readonly WorkspaceFolder[] | undefined,
+        private readonly factories: WorkspaceLocatorFactory[],
+    ) {
         super();
         this.activate().ignoreErrors();
     }
@@ -99,20 +109,18 @@ export class WorkspaceLocators extends LazyResourceBasedLocator {
     }
 
     protected async initResources(): Promise<void> {
-        const disposable = this.watchRoots({
-            initRoot: (root: Uri) => this.addRoot(root),
-            addRoot: (root: Uri) => {
-                // Drop the old one, if necessary.
-                this.removeRoot(root);
-                this.addRoot(root);
-                this.emitter.fire({ searchLocation: root });
-            },
-            removeRoot: (root: Uri) => {
-                this.removeRoot(root);
-                this.emitter.fire({ searchLocation: root });
-            },
-        });
-        this.disposables.push(disposable);
+        if (this.folders) {
+            this.folders.map((f) => f.uri).forEach(this.watchArgs.initRoot);
+        }
+    }
+
+    public onDidChangeWorkspaceFolders(event: WorkspaceFoldersChangeEvent): void {
+        for (const root of event.removed) {
+            this.watchArgs.removeRoot(root.uri);
+        }
+        for (const root of event.added) {
+            this.watchArgs.addRoot(root.uri);
+        }
     }
 
     private addRoot(root: Uri): void {
