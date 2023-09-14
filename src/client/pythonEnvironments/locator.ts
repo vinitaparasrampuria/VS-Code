@@ -3,7 +3,6 @@
 
 import * as vscode from 'vscode';
 import { getOSType, OSType } from '../common/utils/platform';
-import { ExtensionState } from '../components';
 import { BasicEnvInfo, ILocator, IResolvingLocator } from './base/locator';
 import { PythonEnvsReducer } from './base/locators/composite/envsReducer';
 import { PythonEnvsResolver } from './base/locators/composite/envsResolver';

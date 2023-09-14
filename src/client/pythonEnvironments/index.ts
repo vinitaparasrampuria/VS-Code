@@ -21,7 +21,6 @@ import {
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 import { traceError } from '../logging';
 import { EnvsMiddleWare } from './base/locators/composite/envsMiddleware';
-import { createSubLocators } from './locator';
 
 /**
  * Set up the Python environments component (during extension activation).'
