@@ -5,39 +5,23 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { cloneDeep } from 'lodash';
 import { getGlobalStorage, IPersistentStorage } from '../common/persistentState';
-import { getOSType, OSType } from '../common/utils/platform';
 import { ActivationResult, ExtensionState } from '../components';
 import { PythonEnvInfo } from './base/info';
-import { BasicEnvInfo, IDiscoveryAPI, ILocator } from './base/locator';
-import { PythonEnvsReducer } from './base/locators/composite/envsReducer';
-import { PythonEnvsResolver } from './base/locators/composite/envsResolver';
-import { WindowsPathEnvVarLocator } from './base/locators/lowLevel/windowsKnownPathsLocator';
-import { WorkspaceVirtualEnvironmentLocator } from './base/locators/lowLevel/workspaceVirtualEnvLocator';
+import { IDiscoveryAPI } from './base/locator';
 import {
     initializeExternalDependencies as initializeLegacyExternalDependencies,
     normCasePath,
 } from './common/externalDependencies';
-import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/wrappers';
-import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
-import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
-import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
-import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
-import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
-import { WindowsRegistryLocator } from './base/locators/lowLevel/windowsRegistryLocator';
-import { MicrosoftStoreLocator } from './base/locators/lowLevel/microsoftStoreLocator';
-import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { registerNewDiscoveryForIOC } from './legacyIOC';
-import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 import { createPythonEnvironments } from './api';
 import {
     createCollectionCache as createCache,
     IEnvsCollectionCache,
 } from './base/locators/composite/envsCollectionCache';
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
-import { IDisposable } from '../common/types';
 import { traceError } from '../logging';
-import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 import { EnvsMiddleWare } from './base/locators/composite/envsMiddleware';
+import { createSubLocators } from './locator';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -108,83 +92,10 @@ async function createLocator(
     ext: ExtensionState,
     // This is shared.
 ): Promise<IDiscoveryAPI> {
-    // Create the low-level locators.
-    const locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
-        // Here we pull the locators together.
-        createNonWorkspaceLocators(ext),
-        createWorkspaceLocator(ext),
-    );
-
-    // Create the env info service used by ResolvingLocator and CachingLocator.
-    const envInfoService = getEnvironmentInfoService(ext.disposables);
-
-    // Build the stack of composite locators.
-    const reducer = new PythonEnvsReducer(locators);
-    const resolvingLocator = new PythonEnvsResolver(
-        reducer,
-        // These are shared.
-        envInfoService,
-    );
-    const middleware = new EnvsMiddleWare(resolvingLocator);
+    const middleware = new EnvsMiddleWare();
+    ext.disposables.push(middleware);
     const caching = new EnvsCollectionService(await createCollectionCache(ext), middleware);
     return caching;
-}
-
-function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>[] {
-    const locators: (ILocator<BasicEnvInfo> & Partial<IDisposable>)[] = [];
-    locators.push(
-        // OS-independent locators go here.
-        new PyenvLocator(),
-        new CondaEnvironmentLocator(),
-        new ActiveStateLocator(),
-        new GlobalVirtualEnvironmentLocator(),
-        new CustomVirtualEnvironmentLocator(),
-    );
-
-    if (getOSType() === OSType.Windows) {
-        locators.push(
-            // Windows specific locators go here.
-            new WindowsRegistryLocator(),
-            new MicrosoftStoreLocator(),
-            new WindowsPathEnvVarLocator(),
-        );
-    } else {
-        locators.push(
-            // Linux/Mac locators go here.
-            new PosixKnownPathsLocator(),
-        );
-    }
-
-    const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
-    ext.disposables.push(...disposables);
-    return locators;
-}
-
-function watchRoots(args: WatchRootsArgs): IDisposable {
-    const { initRoot, addRoot, removeRoot } = args;
-
-    const folders = vscode.workspace.workspaceFolders;
-    if (folders) {
-        folders.map((f) => f.uri).forEach(initRoot);
-    }
-
-    return vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-        for (const root of event.removed) {
-            removeRoot(root.uri);
-        }
-        for (const root of event.added) {
-            addRoot(root.uri);
-        }
-    });
-}
-
-function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
-    const locators = new WorkspaceLocators(watchRoots, [
-        (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
-        // Add an ILocator factory func here for each kind of workspace-rooted locator.
-    ]);
-    ext.disposables.push(locators);
-    return locators;
 }
 
 function getFromStorage(storage: IPersistentStorage<PythonEnvInfo[]>): PythonEnvInfo[] {
