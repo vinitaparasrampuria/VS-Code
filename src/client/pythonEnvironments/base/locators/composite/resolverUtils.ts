@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { URI as Uri } from 'vscode-uri';
 import { uniq } from 'lodash';
 import {
     PythonEnvInfo,

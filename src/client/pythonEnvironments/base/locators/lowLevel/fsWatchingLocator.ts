@@ -3,7 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { URI as Uri } from 'vscode-uri';
 import { FileChangeType, watchLocationForPattern } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
 import { traceError, traceVerbose } from '../../../../logging';
