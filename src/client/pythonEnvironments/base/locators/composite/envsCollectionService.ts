@@ -14,7 +14,7 @@ import { getEnvPath } from '../../info/env';
 import {
     GetRefreshEnvironmentsOptions,
     IDiscoveryAPI,
-    IResolvingLocator,
+    IEnvsMiddleware,
     isProgressEvent,
     ProgressNotificationEvent,
     ProgressReportStage,
@@ -54,9 +54,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.progressPromises.get(stage)?.promise;
     }
 
-    constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
+    constructor(private readonly cache: IEnvsCollectionCache, private readonly middleware: IEnvsMiddleware) {
         super();
-        this.locator.onChanged((event) => {
+        this.middleware.onChanged((event) => {
             const query: PythonLocatorQuery | undefined = event.providerId
                 ? { providerId: event.providerId, envPath: event.envPath }
                 : undefined; // We can also form a query based on the event, but skip that for simplicity.
@@ -91,7 +91,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             traceVerbose(`Resolved ${path} from cache: ${JSON.stringify(cachedEnv)}`);
             return cachedEnv;
         }
-        const resolved = await this.locator.resolveEnv(path).catch((ex) => {
+        const resolved = await this.middleware.resolveEnv(path).catch((ex) => {
             traceError(`Failed to resolve ${path}`, ex);
             return undefined;
         });
@@ -133,16 +133,16 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     private async addEnvsToCacheForQuery(query: PythonLocatorQuery | undefined) {
-        const iterator = this.locator.iterEnvs(query);
+        const iteratorId = await this.middleware.iterInitialize(query);
         const seen: PythonEnvInfo[] = [];
         const state = {
             done: false,
             pending: 0,
         };
         const updatesDone = createDeferred<void>();
-
-        if (iterator.onUpdated !== undefined) {
-            const listener = iterator.onUpdated(async (event) => {
+        const itOnUpdated = this.middleware.iterOnUpdated(iteratorId);
+        if (itOnUpdated !== undefined) {
+            const listener = itOnUpdated(async (event) => {
                 if (isProgressEvent(event)) {
                     switch (event.stage) {
                         case ProgressReportStage.discoveryFinished:
@@ -175,9 +175,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             updatesDone.resolve();
         }
 
-        for await (const env of iterator) {
+        let env = await this.middleware.iterNext(iteratorId);
+        while (env !== undefined) {
             seen.push(env);
             this.cache.addEnv(env);
+            env = await this.middleware.iterNext(iteratorId);
         }
         await updatesDone.promise;
         // If query for all envs is done, `seen` should contain the list of all envs.

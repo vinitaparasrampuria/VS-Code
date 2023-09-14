@@ -72,6 +72,7 @@
 		"main",
 		"release/*"
 	],
+    "git.branchProtectionPrompt": "alwaysCommitToNewBranch",
     "git.pullBeforeCheckout": true,
     // Open merge editor for resolving conflicts.
     "git.mergeEditor": true,

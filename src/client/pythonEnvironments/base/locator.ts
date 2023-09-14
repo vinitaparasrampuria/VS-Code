@@ -195,6 +195,15 @@ interface IResolver {
 
 export interface IResolvingLocator<I = PythonEnvInfo> extends IResolver, ICompositeLocator<I> {}
 
+export type EnvIteratorId = number;
+export interface IEnvsMiddleware {
+    iterInitialize(query?: PythonLocatorQuery): Promise<EnvIteratorId>;
+    iterNext(id: EnvIteratorId): Promise<PythonEnvInfo | undefined>;
+    iterOnUpdated(id: EnvIteratorId): Event<PythonEnvUpdatedEvent | ProgressNotificationEvent> | undefined;
+    resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
+    readonly onChanged: Event<PythonEnvsChangedEvent>;
+}
+
 export interface GetRefreshEnvironmentsOptions {
     /**
      * Get refresh promise which resolves once the following stage has been reached for the list of known environments.

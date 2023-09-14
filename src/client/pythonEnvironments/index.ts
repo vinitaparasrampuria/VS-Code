@@ -37,6 +37,7 @@ import { EnvsCollectionService } from './base/locators/composite/envsCollectionS
 import { IDisposable } from '../common/types';
 import { traceError } from '../logging';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
+import { EnvsMiddleWare } from './base/locators/composite/envsMiddleware';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -124,11 +125,8 @@ async function createLocator(
         // These are shared.
         envInfoService,
     );
-    const caching = new EnvsCollectionService(
-        await createCollectionCache(ext),
-        // This is shared.
-        resolvingLocator,
-    );
+    const middleware = new EnvsMiddleWare(resolvingLocator);
+    const caching = new EnvsCollectionService(await createCollectionCache(ext), middleware);
     return caching;
 }
 
