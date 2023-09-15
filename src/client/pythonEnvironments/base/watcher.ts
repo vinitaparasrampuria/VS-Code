@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { FileChangeType } from '../../common/platform/fileSystemWatcher';
 import { PythonEnvInfo, PythonEnvKind } from './info';
+import { EventEmitter } from '../common/eventEmitter';
 
 // The use cases for `BasicPythonEnvsChangedEvent` are currently
 // hypothetical.  However, there's a real chance they may prove
@@ -84,9 +85,11 @@ export class PythonEnvsWatcher<T = PythonEnvsChangedEvent> implements IPythonEnv
      */
     public readonly onChanged: Event<T>;
 
-    private readonly didChange = new EventEmitter<T>();
+    private readonly didChange: EventEmitter<T>;
 
     constructor() {
+        this.didChange = new EventEmitter<T>();
+
         this.onChanged = this.didChange.event;
     }
 

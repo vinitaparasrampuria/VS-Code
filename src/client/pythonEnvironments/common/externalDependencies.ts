@@ -3,7 +3,6 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService } from '../../common/types';
@@ -187,6 +186,7 @@ export function getPythonSetting<T>(name: string): T | undefined {
  * @param callback The listener function to be called when the setting changes.
  */
 export function onDidChangePythonSetting(name: string, callback: () => void): IDisposable {
+    const vscode = require('vscode');
     return vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
         if (event.affectsConfiguration(`python.${name}`)) {
             callback();

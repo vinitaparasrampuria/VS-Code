@@ -4,6 +4,7 @@
 import * as path from 'path';
 import { URI as Uri } from 'vscode-uri';
 import { uniq } from 'lodash';
+import { WorkspaceFolder } from 'vscode';
 import {
     PythonEnvInfo,
     PythonEnvKind,
@@ -52,12 +53,15 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<Pytho
  * executable and returns it. Notice `undefined` is never returned, so environment
  * returned could still be invalid.
  */
-export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
+export async function resolveBasicEnv(
+    env: BasicEnvInfo,
+    folders: readonly WorkspaceFolder[] | undefined,
+): Promise<PythonEnvInfo> {
     const { kind, source } = env;
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(env);
-    resolvedEnv.searchLocation = getSearchLocation(resolvedEnv);
+    resolvedEnv.searchLocation = getSearchLocation(resolvedEnv, folders);
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
     if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
         // We can update env further using information we can get from the Windows registry.
@@ -87,9 +91,11 @@ async function getEnvType(env: PythonEnvInfo) {
     return undefined;
 }
 
-function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
-    const folders = getWorkspaceFolderPaths();
-    const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f) || isParentPath(env.location, f));
+function getSearchLocation(env: PythonEnvInfo, folders: readonly WorkspaceFolder[] | undefined): Uri | undefined {
+    const folderPaths = folders?.map((w) => w.uri.fsPath) ?? [];
+    const isRootedEnv = folderPaths.some(
+        (f) => isParentPath(env.executable.filename, f) || isParentPath(env.location, f),
+    );
     if (isRootedEnv) {
         // For environments inside roots, we need to set search location so they can be queried accordingly.
         // In certain usecases environment directory can itself be a root, for eg. `python -m venv .`.

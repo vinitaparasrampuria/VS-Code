@@ -5,7 +5,12 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { traceError } from '../../logging';
 
-export import FileType = vscode.FileType;
+export enum FileType {
+    Unknown = 0,
+    File = 1,
+    Directory = 2,
+    SymbolicLink = 64,
+}
 
 export type DirEntry = {
     filename: string;

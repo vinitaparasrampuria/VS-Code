@@ -13,9 +13,9 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsWatcher } from '../../watcher';
-import { createSubLocators } from '../../../locator';
 import { IDisposableRegistry } from '../../../../common/types';
 import { WorkspaceLocators } from '../wrappers';
+import { createSubLocators } from '../../../locator';
 
 /**
  * A service acts as a bridge between Env Resolver and Env Collection.

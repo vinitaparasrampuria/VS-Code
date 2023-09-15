@@ -1,10 +1,9 @@
-import { Event } from 'vscode';
+import { Event, EventEmitter, WorkspaceFoldersChangeEvent, workspace } from 'vscode';
 import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { PythonEnvInfo } from '../../info';
 import {
     EnvIteratorId,
-    IPythonEnvsIterator,
     IWorkerMiddleWare,
     ProgressNotificationEvent,
     PythonEnvUpdatedEvent,
@@ -16,18 +15,18 @@ import { PythonEnvsWatcher } from '../../watcher';
  * A service acts as a bridge between Env Resolver and Env Collection.
  */
 export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IWorkerMiddleWare {
-    private idCount = 0;
-
     private worker: Worker;
 
-    private iterators = new Map<EnvIteratorId, IPythonEnvsIterator>();
+    private onUpdatedMap = new Map<EnvIteratorId, Event<PythonEnvUpdatedEvent | ProgressNotificationEvent>>();
 
     constructor() {
         super();
-        this.worker = new Worker(path.join(__dirname, 'worker.js'));
-        // TODO: Handle event.
-        this.locator.onChanged((e) => {
-            this.fire(e);
+        this.worker = new Worker(path.join(__dirname, 'worker.js'), { workerData: workspace.workspaceFolders });
+        this.worker.addListener('message', (event) => {
+            const { methodName, result } = event;
+            if (methodName === 'onChanged') {
+                this.fire(result);
+            }
         });
     }
 
@@ -36,17 +35,32 @@ export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IWorker
     }
 
     public async iterInitialize(query?: PythonLocatorQuery | undefined): Promise<EnvIteratorId> {
-        return this.callMethod('iterInitialize', [query]);
+        const id = await this.callMethod('iterInitialize', [query]);
+        const eventEmitter = new EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>();
+        this.onUpdatedMap.set(id, eventEmitter.event);
+        this.worker.addListener('message', (event) => {
+            const { methodName, result } = event;
+            if (methodName === 'iterOnUpdated' && result.id === id) {
+                eventEmitter.fire(result.eventData);
+            }
+        });
+        return id;
     }
 
     public async iterNext(id: EnvIteratorId): Promise<PythonEnvInfo | undefined> {
         return this.callMethod('iterNext', [id]);
     }
 
+    public async onDidChangeWorkspaceFolders(event: WorkspaceFoldersChangeEvent): Promise<void> {
+        await this.callMethod('onDidChangeWorkspaceFolders', [event]);
+    }
+
+    public async dispose(): Promise<void> {
+        await this.callMethod('dispose', []);
+    }
+
     public iterOnUpdated(id: EnvIteratorId): Event<PythonEnvUpdatedEvent | ProgressNotificationEvent> | undefined {
-        // TODO: Handle event.
-        const it = this.getIterator(id);
-        return it?.onUpdated;
+        return this.onUpdatedMap.get(id);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

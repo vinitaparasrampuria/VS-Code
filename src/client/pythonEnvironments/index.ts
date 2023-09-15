@@ -21,6 +21,7 @@ import {
 import { EnvsCollectionService } from './base/locators/composite/envsCollectionService';
 import { traceError } from '../logging';
 import { EnvsMiddleWare } from './base/locators/composite/envsMiddleware';
+import { WorkerThreadMiddleWare } from './base/locators/composite/workerMiddleware';
 
 /**
  * Set up the Python environments component (during extension activation).'
@@ -91,6 +92,7 @@ async function createLocator(
     ext: ExtensionState,
     // This is shared.
 ): Promise<IDiscoveryAPI> {
+    const w = new WorkerThreadMiddleWare();
     const middleware = new EnvsMiddleWare(vscode.workspace.workspaceFolders);
     ext.disposables.push(
         vscode.workspace.onDidChangeWorkspaceFolders((event) => middleware.onDidChangeWorkspaceFolders(event)),

@@ -49,6 +49,7 @@ export function createSubLocators(
         reducer,
         // These are shared.
         envInfoService,
+        folders,
     );
     return { locator: resolvingLocator, disposables, workspaceLocator };
 }

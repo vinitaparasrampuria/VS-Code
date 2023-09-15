@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { cloneDeep, isEqual, uniq } from 'lodash';
-import { Event, EventEmitter } from 'vscode';
+import { Event } from 'vscode';
 import { traceVerbose } from '../../../../logging';
 import { PythonEnvKind } from '../../info';
 import { areSameEnv } from '../../info/env';
@@ -19,6 +19,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
+import { EventEmitter } from '../../../common/eventEmitter';
 
 /**
  * Combines duplicate environments received from the incoming locator into one and passes on unique environments

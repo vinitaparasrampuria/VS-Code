@@ -4,7 +4,6 @@
 import { cloneDeep, isEqual } from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { getArchitectureDisplayName } from '../../../common/platform/registry';
 import { Architecture } from '../../../common/utils/platform';
 import { arePathsSame, isParentPath, normCasePath } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
@@ -75,6 +74,17 @@ export function buildEnvInfo(init?: {
     }
     env.id = getEnvID(env.executable.filename, env.location);
     return env;
+}
+
+export function getArchitectureDisplayName(arch?: Architecture): string {
+    switch (arch) {
+        case Architecture.x64:
+            return '64-bit';
+        case Architecture.x86:
+            return '32-bit';
+        default:
+            return '';
+    }
 }
 
 export function areEnvsDeepEqual(env1: PythonEnvInfo, env2: PythonEnvInfo): boolean {

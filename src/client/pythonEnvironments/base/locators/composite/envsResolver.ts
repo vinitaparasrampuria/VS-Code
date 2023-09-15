@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { cloneDeep } from 'lodash';
-import { Event, EventEmitter } from 'vscode';
+import { Event, WorkspaceFolder } from 'vscode';
 import { identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
@@ -24,6 +24,7 @@ import { resolveBasicEnv } from './resolverUtils';
 import { traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath, getInterpreterPathFromDir, isPythonExecutable } from '../../../common/commonUtils';
 import { getEmptyVersion } from '../../info/pythonVersion';
+import { EventEmitter } from '../../../common/eventEmitter';
 
 /**
  * Calls environment info service which runs `interpreterInfo.py` script on environments received
@@ -37,6 +38,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
     constructor(
         private readonly parentLocator: ICompositeLocator<BasicEnvInfo>,
         private readonly environmentInfoService: IEnvironmentInfoService,
+        private readonly workspaceFolders: readonly WorkspaceFolder[] | undefined,
     ) {
         this.parentLocator.onChanged((event) => {
             if (event.type && event.searchLocation !== undefined) {
@@ -50,7 +52,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const [executablePath, envPath] = await getExecutablePathAndEnvPath(path);
         path = executablePath.length ? executablePath : envPath;
         const kind = await identifyEnvironment(path);
-        const environment = await resolveBasicEnv({ kind, executablePath, envPath });
+        const environment = await resolveBasicEnv({ kind, executablePath, envPath }, this.workspaceFolders);
         const info = await this.environmentInfoService.getEnvironmentInfo(environment);
         traceVerbose(
             `Environment resolver resolved ${path} for ${JSON.stringify(environment)} to ${JSON.stringify(info)}`,
@@ -98,7 +100,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                 } else if (seen[event.index] !== undefined) {
                     const old = seen[event.index];
                     await setKind(event.update, environmentKinds);
-                    seen[event.index] = await resolveBasicEnv(event.update);
+                    seen[event.index] = await resolveBasicEnv(event.update, this.workspaceFolders);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
@@ -116,7 +118,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         while (!result.done) {
             // Use cache from the current refresh where possible.
             await setKind(result.value, environmentKinds);
-            const currEnv = await resolveBasicEnv(result.value);
+            const currEnv = await resolveBasicEnv(result.value, this.workspaceFolders);
             seen.push(currEnv);
             yield currEnv;
             this.resolveInBackground(seen.indexOf(currEnv), state, didUpdate, seen).ignoreErrors();
