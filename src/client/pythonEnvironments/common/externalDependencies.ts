@@ -3,6 +3,7 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import { ConfigurationChangeEvent } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService } from '../../common/types';
@@ -186,10 +187,17 @@ export function getPythonSetting<T>(name: string): T | undefined {
  * @param callback The listener function to be called when the setting changes.
  */
 export function onDidChangePythonSetting(name: string, callback: () => void): IDisposable {
-    const vscode = require('vscode');
-    return vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration(`python.${name}`)) {
-            callback();
-        }
-    });
+    try {
+        const vscode = require('vscode');
+        return vscode.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
+            if (event.affectsConfiguration(`python.${name}`)) {
+                callback();
+            }
+        });
+    } catch (ex) {
+        traceError(ex);
+        console.log(ex);
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        return { dispose: () => {} };
+    }
 }
