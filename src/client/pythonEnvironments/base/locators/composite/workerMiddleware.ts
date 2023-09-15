@@ -1,4 +1,4 @@
-import { Event, EventEmitter, WorkspaceFoldersChangeEvent, workspace } from 'vscode';
+import { Event, EventEmitter, WorkspaceFolder, WorkspaceFoldersChangeEvent, workspace } from 'vscode';
 import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { PythonEnvInfo } from '../../info';
@@ -19,9 +19,9 @@ export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IWorker
 
     private onUpdatedMap = new Map<EnvIteratorId, Event<PythonEnvUpdatedEvent | ProgressNotificationEvent>>();
 
-    constructor() {
+    constructor(folders: readonly WorkspaceFolder[] | undefined) {
         super();
-        this.worker = new Worker(path.join(__dirname, 'worker.js'), { workerData: workspace.workspaceFolders });
+        this.worker = new Worker(path.join(__dirname, 'worker.js'), { workerData: folders });
         this.worker.addListener('message', (event) => {
             const { methodName, result } = event;
             if (methodName === 'onChanged') {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable no-restricted-globals */
 import { parentPort, workerData } from 'worker_threads';
@@ -18,11 +19,12 @@ parentPort.on('message', async (event) => {
     if (!parentPort) {
         throw new Error('Not in a worker thread');
     }
-    const { methodName, args } = event;
+    type EventType = { methodName: string; args: any[] };
+    const { methodName, args } = event as EventType;
     if (methodName && typeof envsMiddleware[methodName as keyof EnvsMiddleWare] === 'function') {
         const method = envsMiddleware[methodName as keyof EnvsMiddleWare] as Function;
         try {
-            const result = await method.apply(envsMiddleware, ...args);
+            const result = await method.apply(envsMiddleware, args);
             parentPort.postMessage({ methodName, result });
         } catch (error) {
             parentPort.postMessage({ methodName, error: (error as Error).message });
