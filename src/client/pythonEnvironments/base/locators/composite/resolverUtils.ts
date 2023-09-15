@@ -30,7 +30,6 @@ import { BasicEnvInfo } from '../../locator';
 import { parseVersionFromExecutable } from '../../info/executable';
 import { traceError, traceWarn } from '../../../../logging';
 import { isVirtualEnvironment } from '../../../common/environmentManagers/simplevirtualenvs';
-import { getWorkspaceFolderPaths } from '../../../../common/vscodeApis/workspaceApis';
 import { ActiveState } from '../../../common/environmentManagers/activestate';
 
 function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<PythonEnvInfo>> {

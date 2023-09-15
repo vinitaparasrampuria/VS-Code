@@ -9,13 +9,18 @@ import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { traceError, traceVerbose } from '../../../../logging';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
+import { PythonDiscoverySettings } from '../../../common/settings';
 
 export class ActiveStateLocator extends LazyResourceBasedLocator {
     public readonly providerId: string = 'activestate';
 
+    public constructor(private readonly settings: PythonDiscoverySettings) {
+        super();
+    }
+
     // eslint-disable-next-line class-methods-use-this
     public async *doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        const state = await ActiveState.getState();
+        const state = await ActiveState.getState(this.settings);
         if (state === undefined) {
             traceVerbose(`Couldn't locate the state binary.`);
             return;

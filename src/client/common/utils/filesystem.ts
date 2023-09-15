@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as vscode from 'vscode';
 import { traceError } from '../../logging';
 
 export enum FileType {

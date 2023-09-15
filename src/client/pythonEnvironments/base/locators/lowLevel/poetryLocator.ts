@@ -14,13 +14,14 @@ import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { traceError, traceVerbose } from '../../../../logging';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
+import { PythonDiscoverySettings } from '../../../common/settings';
 
 /**
  * Gets all default virtual environment locations to look for in a workspace.
  */
-async function getVirtualEnvDirs(root: string): Promise<string[]> {
+async function getVirtualEnvDirs(root: string, settings: PythonDiscoverySettings): Promise<string[]> {
     const envDirs = [path.join(root, localPoetryEnvDirName)];
-    const poetry = await Poetry.getPoetry(root);
+    const poetry = await Poetry.getPoetry(root, settings);
     const virtualenvs = await poetry?.getEnvList();
     if (virtualenvs) {
         envDirs.push(...virtualenvs);
@@ -42,13 +43,13 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 export class PoetryLocator extends LazyResourceBasedLocator {
     public readonly providerId: string = 'poetry';
 
-    public constructor(private readonly root: string) {
+    public constructor(private readonly root: string, private readonly settings: PythonDiscoverySettings) {
         super();
     }
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        async function* iterator(root: string) {
-            const envDirs = await getVirtualEnvDirs(root);
+        async function* iterator(root: string, settings: PythonDiscoverySettings) {
+            const envDirs = await getVirtualEnvDirs(root, settings);
             const envGenerators = envDirs.map((envDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for poetry virtual envs in: ${envDir}`);
@@ -73,6 +74,6 @@ export class PoetryLocator extends LazyResourceBasedLocator {
             traceVerbose(`Finished searching for poetry envs`);
         }
 
-        return iterator(this.root);
+        return iterator(this.root, this.settings);
     }
 }

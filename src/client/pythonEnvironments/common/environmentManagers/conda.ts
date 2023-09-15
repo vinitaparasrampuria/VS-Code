@@ -23,6 +23,7 @@ import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
+import { PythonDiscoverySettings } from '../settings';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -271,9 +272,9 @@ export class Conda {
         });
     }
 
-    public static async getConda(shellPath?: string): Promise<Conda | undefined> {
+    public static async getConda(shellPath?: string, settings?: PythonDiscoverySettings): Promise<Conda | undefined> {
         if (Conda.condaPromise.get(shellPath) === undefined || isTestExecution()) {
-            Conda.condaPromise.set(shellPath, Conda.locate(shellPath));
+            Conda.condaPromise.set(shellPath, Conda.locate(shellPath, settings));
         }
         return Conda.condaPromise.get(shellPath);
     }
@@ -284,10 +285,12 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string, settings?: PythonDiscoverySettings): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
-        const customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
+        const customCondaPath = settings
+            ? settings[CONDAPATH_SETTING_KEY]
+            : getPythonSetting<string>(CONDAPATH_SETTING_KEY);
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
         // Produce a list of candidate binaries to be probed by exec'ing them.

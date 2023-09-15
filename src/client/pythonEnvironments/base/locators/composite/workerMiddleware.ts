@@ -1,4 +1,4 @@
-import { Event, EventEmitter, WorkspaceFolder, WorkspaceFoldersChangeEvent, workspace } from 'vscode';
+import { Event, EventEmitter, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { PythonEnvInfo } from '../../info';
@@ -10,6 +10,7 @@ import {
     PythonLocatorQuery,
 } from '../../locator';
 import { PythonEnvsWatcher } from '../../watcher';
+import { PythonDiscoverySettings } from '../../../common/settings';
 
 /**
  * A service acts as a bridge between Env Resolver and Env Collection.
@@ -19,9 +20,11 @@ export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IWorker
 
     private onUpdatedMap = new Map<EnvIteratorId, Event<PythonEnvUpdatedEvent | ProgressNotificationEvent>>();
 
-    constructor(folders: readonly WorkspaceFolder[] | undefined) {
+    constructor(folders: readonly WorkspaceFolder[] | undefined, settings: PythonDiscoverySettings) {
         super();
-        this.worker = new Worker(path.join(__dirname, 'worker.js'), { workerData: folders });
+        this.worker = new Worker(path.join(__dirname, 'worker.js'), {
+            workerData: { folders: convertWorkspaceFolders(folders), settings },
+        });
         this.worker.addListener('message', (event) => {
             const { methodName, result } = event;
             if (methodName === 'onChanged') {
@@ -81,4 +84,18 @@ export class WorkerThreadMiddleWare extends PythonEnvsWatcher implements IWorker
             this.worker.postMessage({ methodName: currMethod, args });
         });
     }
+}
+
+function convertWorkspaceFolders(workspaceFolders: readonly WorkspaceFolder[] | undefined) {
+    if (!workspaceFolders) {
+        return [];
+    }
+    return workspaceFolders.map((w) => {
+        const workspaceFolder: WorkspaceFolder = {
+            name: w.name,
+            uri: (w.uri.toString() as unknown) as Uri,
+            index: w.index,
+        };
+        return workspaceFolder;
+    });
 }

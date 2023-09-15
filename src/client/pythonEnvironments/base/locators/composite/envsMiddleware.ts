@@ -16,6 +16,7 @@ import { PythonEnvsWatcher } from '../../watcher';
 import { IDisposableRegistry } from '../../../../common/types';
 import { WorkspaceLocators } from '../wrappers';
 import { createSubLocators } from '../../../locator';
+import { PythonDiscoverySettings } from '../../../common/settings';
 
 /**
  * A service acts as a bridge between Env Resolver and Env Collection.
@@ -31,9 +32,9 @@ export class EnvsMiddleWare extends PythonEnvsWatcher implements IEnvsMiddleware
 
     private iterators = new Map<EnvIteratorId, IPythonEnvsIterator>();
 
-    constructor(folders: readonly WorkspaceFolder[] | undefined) {
+    constructor(folders: readonly WorkspaceFolder[] | undefined, settings: PythonDiscoverySettings) {
         super();
-        const { locator, disposables, workspaceLocator } = createSubLocators(folders);
+        const { locator, disposables, workspaceLocator } = createSubLocators(folders, settings);
         this.disposables = disposables;
         this.locator = locator;
         this.workspaceLocator = workspaceLocator;

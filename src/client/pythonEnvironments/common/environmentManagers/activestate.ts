@@ -15,6 +15,7 @@ import {
 import { cache } from '../../../common/utils/decorators';
 import { traceError, traceVerbose } from '../../../logging';
 import { getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
+import { PythonDiscoverySettings } from '../settings';
 
 export const ACTIVESTATETOOLPATH_SETTING_KEY = 'activeStateToolPath';
 
@@ -36,9 +37,9 @@ export async function isActiveStateEnvironment(interpreterPath: string): Promise
 export class ActiveState {
     private static statePromise: Promise<ActiveState | undefined> | undefined;
 
-    public static async getState(): Promise<ActiveState | undefined> {
+    public static async getState(settings?: PythonDiscoverySettings): Promise<ActiveState | undefined> {
         if (ActiveState.statePromise === undefined) {
-            ActiveState.statePromise = ActiveState.locate();
+            ActiveState.statePromise = ActiveState.locate(settings);
         }
         return ActiveState.statePromise;
     }
@@ -59,10 +60,11 @@ export class ActiveState {
             : path.join(home, '.local', 'ActiveState', 'StateTool');
     }
 
-    private static async locate(): Promise<ActiveState | undefined> {
+    private static async locate(settings?: PythonDiscoverySettings): Promise<ActiveState | undefined> {
         const stateToolDir = this.getStateToolDir();
-        const stateCommand =
-            getPythonSetting<string>(ACTIVESTATETOOLPATH_SETTING_KEY) ?? ActiveState.defaultStateCommand;
+        const stateCommand = settings
+            ? settings[ACTIVESTATETOOLPATH_SETTING_KEY]
+            : getPythonSetting<string>(ACTIVESTATETOOLPATH_SETTING_KEY);
         if (stateToolDir && ((await pathExists(stateToolDir)) || stateCommand !== this.defaultStateCommand)) {
             return new ActiveState();
         }

@@ -3,7 +3,6 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { ConfigurationChangeEvent } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService } from '../../common/types';
@@ -188,6 +187,7 @@ export function getPythonSetting<T>(name: string): T | undefined {
  */
 export function onDidChangePythonSetting(name: string, callback: () => void): IDisposable {
     try {
+        // eslint-disable-next-line global-require
         const vscode = require('vscode');
         return vscode.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
             if (event.affectsConfiguration(`python.${name}`)) {
@@ -195,8 +195,8 @@ export function onDidChangePythonSetting(name: string, callback: () => void): ID
             }
         });
     } catch (ex) {
-        traceError(ex);
-        console.log(ex);
+        // traceError('Setting', (ex as Error).message);
+        // console.log('Setting', (ex as Error).message);
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         return { dispose: () => {} };
     }

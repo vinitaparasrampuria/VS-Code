@@ -1,6 +1,8 @@
+/* eslint-disable global-require */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import type * as vscodeTypes from 'vscode';
 import { traceError, traceVerbose } from '../../logging';
 import { IDisposable } from '../types';
 import { Disposables } from '../utils/resourceLifecycle';
@@ -20,7 +22,7 @@ export function watchLocationForPattern(
     callback: (type: FileChangeType, absPath: string) => void,
 ): IDisposable {
     try {
-        const vscode = require('vscode');
+        const vscode = require('vscode') as typeof vscodeTypes;
         const globPattern = new vscode.RelativePattern(baseDir, pattern);
         const disposables = new Disposables();
         traceVerbose(`Start watching: ${baseDir} with pattern ${pattern} using VSCode API`);
@@ -30,8 +32,8 @@ export function watchLocationForPattern(
         disposables.push(watcher.onDidDelete((e) => callback(FileChangeType.Deleted, e.fsPath)));
         return disposables;
     } catch (ex) {
-        traceError(ex);
-        console.log(ex);
+        traceError('Watcher', (ex as Error).message);
+        console.log('Watcher', (ex as Error).message);
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         return { dispose: () => {} };
     }

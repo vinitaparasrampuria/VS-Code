@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
-import { Architecture, getOSType, OSType } from '../../common/utils/platform';
+import { getOSType, OSType } from '../../common/utils/platform';
 import { traceError } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';

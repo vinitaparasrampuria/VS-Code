@@ -506,7 +506,7 @@
                     ]
                 },
                 "python.condaPath": {
-                    "default": "",
+                    "default": "conda",
                     "description": "%python.condaPath.description%",
                     "scope": "machine",
                     "type": "string"

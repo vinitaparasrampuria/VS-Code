@@ -20,12 +20,14 @@ import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
+import { PythonDiscoverySettings } from './common/settings';
 
 /**
  * Get the locator to use in the component.
  */
 export function createSubLocators(
     folders: readonly vscode.WorkspaceFolder[] | undefined,
+    settings: PythonDiscoverySettings,
 ): {
     locator: IResolvingLocator;
     disposables: IDisposableRegistry;
@@ -33,10 +35,10 @@ export function createSubLocators(
 } {
     const disposables: IDisposableRegistry = [];
     // Create the low-level locators.
-    const workspaceLocator = createWorkspaceLocator(folders, disposables);
+    const workspaceLocator = createWorkspaceLocator(folders, disposables, settings);
     const locators: ILocator<BasicEnvInfo> = new ExtensionLocators<BasicEnvInfo>(
         // Here we pull the locators together.
-        createNonWorkspaceLocators(disposables),
+        createNonWorkspaceLocators(disposables, settings),
         workspaceLocator,
     );
 
@@ -54,15 +56,18 @@ export function createSubLocators(
     return { locator: resolvingLocator, disposables, workspaceLocator };
 }
 
-function createNonWorkspaceLocators(disposables: IDisposableRegistry): ILocator<BasicEnvInfo>[] {
+function createNonWorkspaceLocators(
+    disposables: IDisposableRegistry,
+    settings: PythonDiscoverySettings,
+): ILocator<BasicEnvInfo>[] {
     const locators: (ILocator<BasicEnvInfo> & Partial<IDisposable>)[] = [];
     locators.push(
         // OS-independent locators go here.
         new PyenvLocator(),
-        new CondaEnvironmentLocator(),
-        new ActiveStateLocator(),
+        new CondaEnvironmentLocator(settings),
+        new ActiveStateLocator(settings),
         new GlobalVirtualEnvironmentLocator(),
-        new CustomVirtualEnvironmentLocator(),
+        new CustomVirtualEnvironmentLocator(settings),
     );
 
     if (getOSType() === OSType.Windows) {
@@ -87,9 +92,13 @@ function createNonWorkspaceLocators(disposables: IDisposableRegistry): ILocator<
 function createWorkspaceLocator(
     folders: readonly vscode.WorkspaceFolder[] | undefined,
     disposables: IDisposableRegistry,
+    settings: PythonDiscoverySettings,
 ): WorkspaceLocators {
     const locators = new WorkspaceLocators(folders, [
-        (root: vscode.Uri) => [new WorkspaceVirtualEnvironmentLocator(root.fsPath), new PoetryLocator(root.fsPath)],
+        (root: vscode.Uri) => [
+            new WorkspaceVirtualEnvironmentLocator(root.fsPath),
+            new PoetryLocator(root.fsPath, settings),
+        ],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
     ]);
     disposables.push(locators);

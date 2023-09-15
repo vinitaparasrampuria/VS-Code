@@ -2,10 +2,30 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable no-restricted-globals */
 import { parentPort, workerData } from 'worker_threads';
+import { WorkspaceFolder } from 'vscode';
+import { URI as Uri } from 'vscode-uri';
 import { EnvsMiddleWare } from './envsMiddleware';
+import { traceError } from '../../../../logging';
 
-const folders = workerData;
-const envsMiddleware = new EnvsMiddleWare(folders);
+const { folders, settings } = workerData;
+const workspaceFolders = (folders as WorkspaceFolder[]).map((w) => {
+    const wuri = w.uri;
+    const workspaceFolder = {
+        name: w.name,
+        uri: Uri.parse((w.uri as unknown) as string),
+        index: w.index,
+    };
+    if (typeof wuri === 'string') {
+        workspaceFolder.uri = Uri.parse(wuri);
+    } else if ('scheme' in wuri && 'path' in wuri) {
+        workspaceFolder.uri = Uri.parse(`${wuri.scheme}://${wuri.path}`);
+    } else {
+        traceError('Unexpected search location', JSON.stringify(wuri));
+    }
+    return workspaceFolder;
+});
+
+const envsMiddleware = new EnvsMiddleWare(workspaceFolders, settings);
 
 if (!parentPort) {
     throw new Error('Not in a worker thread');
@@ -15,6 +35,7 @@ console.log('Worker thread started');
 
 // // Listen for messages from the main thread
 parentPort.on('message', async (event) => {
+    // console.log(JSON.stringify(settings));
     console.log('Worker thread received message', event);
     if (!parentPort) {
         throw new Error('Not in a worker thread');

@@ -6,11 +6,12 @@ import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { Conda, getCondaEnvironmentsTxt } from '../../../common/environmentManagers/conda';
 import { traceError, traceVerbose } from '../../../../logging';
 import { FSWatchingLocator } from './fsWatchingLocator';
+import { PythonDiscoverySettings } from '../../../common/settings';
 
 export class CondaEnvironmentLocator extends FSWatchingLocator {
     public readonly providerId: string = 'conda-envs';
 
-    public constructor() {
+    public constructor(private readonly settings: PythonDiscoverySettings) {
         super(
             () => getCondaEnvironmentsTxt(),
             async () => PythonEnvKind.Conda,
@@ -20,7 +21,7 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
 
     // eslint-disable-next-line class-methods-use-this
     public async *doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        const conda = await Conda.getConda();
+        const conda = await Conda.getConda(undefined, this.settings);
         if (conda === undefined) {
             traceVerbose(`Couldn't locate the conda binary.`);
             return;

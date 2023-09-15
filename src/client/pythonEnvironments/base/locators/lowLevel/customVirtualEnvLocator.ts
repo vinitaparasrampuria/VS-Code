@@ -9,12 +9,7 @@ import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
-import {
-    getPythonSetting,
-    onDidChangePythonSetting,
-    pathExists,
-    untildify,
-} from '../../../common/externalDependencies';
+import { onDidChangePythonSetting, pathExists, untildify } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
     isVenvEnvironment,
@@ -24,6 +19,7 @@ import {
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { traceError, traceVerbose } from '../../../../logging';
+import { PythonDiscoverySettings } from '../../../common/settings';
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
  */
@@ -35,13 +31,13 @@ export const VENVFOLDERS_SETTING_KEY = 'venvFolders';
 /**
  * Gets all custom virtual environment locations to look for environments.
  */
-async function getCustomVirtualEnvDirs(): Promise<string[]> {
+async function getCustomVirtualEnvDirs(settings: PythonDiscoverySettings): Promise<string[]> {
     const venvDirs: string[] = [];
-    const venvPath = getPythonSetting<string>(VENVPATH_SETTING_KEY);
+    const venvPath = settings[VENVPATH_SETTING_KEY];
     if (venvPath) {
         venvDirs.push(untildify(venvPath));
     }
-    const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
+    const venvFolders: string[] = settings[VENVFOLDERS_SETTING_KEY];
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
         venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
@@ -81,8 +77,8 @@ async function getVirtualEnvKind(interpreterPath: string): Promise<PythonEnvKind
 export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
     public readonly providerId: string = 'custom-virtual-envs';
 
-    constructor() {
-        super(getCustomVirtualEnvDirs, getVirtualEnvKind, {
+    constructor(private readonly settings: PythonDiscoverySettings) {
+        super(async () => getCustomVirtualEnvDirs(settings), getVirtualEnvKind, {
             // Note detecting kind of virtual env depends on the file structure around the
             // executable, so we need to wait before attempting to detect it. However even
             // if the type detected is incorrect, it doesn't do any practical harm as kinds
@@ -98,8 +94,8 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
 
     // eslint-disable-next-line class-methods-use-this
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        async function* iterator() {
-            const envRootDirs = await getCustomVirtualEnvDirs();
+        async function* iterator(settings: PythonDiscoverySettings) {
+            const envRootDirs = await getCustomVirtualEnvDirs(settings);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
                     traceVerbose(`Searching for custom virtual envs in: ${envRootDir}`);
@@ -135,6 +131,6 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
             traceVerbose(`Finished searching for custom virtual envs`);
         }
 
-        return iterator();
+        return iterator(this.settings);
     }
 }

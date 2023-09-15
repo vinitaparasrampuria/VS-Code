@@ -20,6 +20,7 @@ import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose } from '../../../logging';
 import { splitLines } from '../../../common/stringUtils';
+import { PythonDiscoverySettings } from '../settings';
 
 /**
  * Global virtual env dir for a project is named as:
@@ -124,19 +125,19 @@ export class Poetry {
      * execution as soon as possible. To do that we need to ensure the operations before the command are
      * performed synchronously.
      */
-    public static async getPoetry(cwd: string): Promise<Poetry | undefined> {
+    public static async getPoetry(cwd: string, settings?: PythonDiscoverySettings): Promise<Poetry | undefined> {
         // Following check should be performed synchronously so we trigger poetry execution as soon as possible.
         if (!hasValidPyprojectToml(cwd)) {
             // This check is not expensive and may change during a session, so we need not cache it.
             return undefined;
         }
         if (Poetry.poetryPromise.get(cwd) === undefined || isTestExecution()) {
-            Poetry.poetryPromise.set(cwd, Poetry.locate(cwd));
+            Poetry.poetryPromise.set(cwd, Poetry.locate(cwd, settings));
         }
         return Poetry.poetryPromise.get(cwd);
     }
 
-    private static async locate(cwd: string): Promise<Poetry | undefined> {
+    private static async locate(cwd: string, settings?: PythonDiscoverySettings): Promise<Poetry | undefined> {
         // First thing this method awaits on should be poetry command execution, hence perform all operations
         // before that synchronously.
 
@@ -144,7 +145,7 @@ export class Poetry {
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
             try {
-                const customPoetryPath = getPythonSetting<string>('poetryPath');
+                const customPoetryPath = settings ? settings.poetryPath : getPythonSetting<string>('poetryPath');
                 if (customPoetryPath && customPoetryPath !== 'poetry') {
                     // If user has specified a custom poetry path, use it first.
                     yield customPoetryPath;
