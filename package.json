@@ -20,6 +20,7 @@
     "enabledApiProposals": [
         "contribEditorContentMenu",
         "quickPickSortByLabel",
+        "envShellEvent",
         "testObserver",
         "quickPickItemTooltip",
         "saveEditor"
@@ -43,7 +44,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.83.0-20230915"
+        "vscode": "^1.82.0-20230830"
     },
     "enableTelemetry": false,
     "keywords": [
