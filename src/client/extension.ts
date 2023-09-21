@@ -62,6 +62,7 @@ export async function activate(context: IExtensionContext): Promise<PythonExtens
     let api: PythonExtension;
     let ready: Promise<void>;
     let serviceContainer: IServiceContainer;
+    console.log('Start stopwatch');
     try {
         const workspaceService = new WorkspaceService();
         context.subscriptions.push(

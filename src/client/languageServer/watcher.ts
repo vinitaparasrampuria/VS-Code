@@ -170,7 +170,10 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
         if (languageServerExtensionManager.canStartLanguageServer(interpreter)) {
             // Start the language server.
+            console.timeEnd('Language server started');
+            console.time('Time taken to start Language server');
             await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
+            console.timeEnd('Time taken to start Language server');
 
             logStartup(languageServerType, lsResource);
             this.languageServerType = languageServerType;

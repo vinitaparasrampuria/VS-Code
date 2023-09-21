@@ -104,9 +104,11 @@ export async function getInterpreterDataFromRegistry(
     hive: string,
     key: string,
 ): Promise<IRegistryInterpreterData[]> {
+    console.time(`Windows registry look up for ${key}`);
     const subKeys = await readRegistryKeys({ arch, hive, key });
     const distroOrgName = key.substr(key.lastIndexOf('\\') + 1);
     const allData = await Promise.all(subKeys.map((subKey) => getInterpreterDataFromKey(subKey, distroOrgName)));
+    console.timeEnd(`Windows registry look up for ${key}`);
     return (allData.filter((data) => data !== undefined) || []) as IRegistryInterpreterData[];
 }
 
@@ -131,6 +133,7 @@ export async function getRegistryInterpreters(): Promise<IRegistryInterpreterDat
 }
 
 async function getRegistryInterpretersImpl(): Promise<IRegistryInterpreterData[]> {
+    console.time('Windows registry discovery');
     let registryData: IRegistryInterpreterData[] = [];
 
     for (const arch of ['x64', 'x86']) {
@@ -149,5 +152,6 @@ async function getRegistryInterpretersImpl(): Promise<IRegistryInterpreterData[]
         }
     }
     registryInterpretersCache = uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);
+    console.timeEnd('Windows registry discovery');
     return registryInterpretersCache;
 }

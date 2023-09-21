@@ -92,7 +92,10 @@ export function plainExec(
 ): Promise<ExecutionResult<string>> {
     const spawnOptions = getDefaultOptions(options, defaultEnv);
     const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
+    console.time(`Time to launch process ${file} ${JSON.stringify(args)}`);
     const proc = spawn(file, args, spawnOptions);
+    console.log(proc.pid)
+    console.timeLog(`Time to launch process ${file} ${JSON.stringify(args)}`);
     // Listen to these errors (unhandled errors in streams tears down the process).
     // Errors will be bubbled up to the `error` event in `proc`, hence no need to log.
     proc.stdout?.on('error', noop);
@@ -153,6 +156,7 @@ export function plainExec(
         } else {
             let stdout = decodeBuffer(stdoutBuffers, encoding);
             stdout = filterOutputUsingCondaRunMarkers(stdout);
+            console.timeEnd(`Time to launch process ${file} ${JSON.stringify(args)}`);
             deferred.resolve({ stdout, stderr });
         }
         internalDisposables.forEach((d) => d.dispose());

@@ -439,7 +439,9 @@ export class Conda {
         if (shellPath) {
             options.shell = shellPath;
         }
+        console.log('Conda binary exec started', performance.now());
         const result = await exec(command, ['info', '--json'], options);
+        console.log('Conda binary exec ended', performance.now());
         traceVerbose(`${command} info --json: ${result.stdout}`);
         return JSON.parse(result.stdout);
     }

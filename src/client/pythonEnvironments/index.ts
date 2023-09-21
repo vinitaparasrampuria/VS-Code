@@ -67,7 +67,7 @@ export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise
      */
     const folders = vscode.workspace.workspaceFolders;
     // Trigger discovery if environment cache is empty.
-    const wasTriggered = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []).get().length > 0;
+    const wasTriggered = false;
     if (!wasTriggered) {
         api.triggerRefresh().ignoreErrors();
         folders?.forEach(async (folder) => {
