@@ -262,7 +262,7 @@ gulp.task('installPythonRequirements', async () => {
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install requirements using 'python'", ex);
+            console.error("Failed to install requirements using 'Python'", ex);
             return false;
         });
 
@@ -285,7 +285,7 @@ gulp.task('installPythonRequirements', async () => {
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', args, undefined, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install Jedi LSP requirements using 'python'", ex);
+            console.error("Failed to install Jedi LSP requirements using 'Python'", ex);
             return false;
         });
 });
@@ -307,7 +307,7 @@ gulp.task('installDebugpy', async () => {
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', depsArgs, undefined, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex);
+            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'Python'", ex);
             return false;
         });
 
@@ -317,7 +317,7 @@ gulp.task('installDebugpy', async () => {
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', wheelsArgs, wheelsEnv, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to install DEBUGPY wheels using 'python'", ex);
+            console.error("Failed to install DEBUGPY wheels using 'Python'", ex);
             return false;
         });
 
@@ -327,7 +327,7 @@ gulp.task('installDebugpy', async () => {
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', getPipArgs, getPipEnv, true)
         .then(() => true)
         .catch((ex) => {
-            console.error("Failed to download get-pip wheels using 'python'", ex);
+            console.error("Failed to download get-pip wheels using 'Python'", ex);
             return false;
         });
 

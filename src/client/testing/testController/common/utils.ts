@@ -285,7 +285,7 @@ export function createExecutionErrorPayload(
     const etp: ExecutionTestPayload = {
         cwd,
         status: 'error',
-        error: 'Test run failed, the python test process was terminated before it could exit on its own.',
+        error: 'Test run failed, the Python test process was terminated before it could exit on its own.',
         result: {},
     };
     // add error result for each attempted test.
@@ -294,7 +294,7 @@ export function createExecutionErrorPayload(
         etp.result![test] = {
             test,
             outcome: 'error',
-            message: ` \n The python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
+            message: ` \n The Python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
         };
     }
     return etp;
@@ -309,7 +309,7 @@ export function createDiscoveryErrorPayload(
         cwd,
         status: 'error',
         error: [
-            ` \n The python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
+            ` \n The Python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
         ],
     };
 }

@@ -71,7 +71,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 ]);
                 if (!success) {
                     traceError(
-                        'Autoselection timeout out, this is likely a issue with how consumer called execution factory API. Using default python to execute.',
+                        'Autoselection timeout out, this is likely a issue with how consumer called execution factory API. Using default Python to execute.',
                     );
                 }
             }

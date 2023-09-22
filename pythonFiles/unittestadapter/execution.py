@@ -18,9 +18,8 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
-
 from testing_tools import process_json_util, socket_manager
+from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
@@ -149,7 +148,7 @@ class UnittestTestResult(unittest.TextTestResult):
         }
         self.formatted[test_id] = result
         if PORT == 0 or UUID == 0:
-            print("Error sending response, port or uuid unknown to python server.")
+            print("Error sending response, port or uuid unknown to Python server.")
         send_run_data(result, PORT, UUID)
 
 
@@ -339,7 +338,7 @@ if __name__ == "__main__":
         }
     eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
     if UUID is None:
-        print("Error sending response, uuid unknown to python server.")
+        print("Error sending response, uuid unknown to Python server.")
         post_response(eot_payload, PORT, "unknown")
     else:
         post_response(eot_payload, PORT, UUID)

@@ -58,7 +58,7 @@ export async function deleteEnvironmentWindows(
     const venvPythonPath = path.join(venvPath, 'Scripts', 'python.exe');
 
     if (await tryDeleteFile(venvPythonPath)) {
-        traceInfo(`Deleted python executable: ${venvPythonPath}`);
+        traceInfo(`Deleted Python executable: ${venvPythonPath}`);
         if (await tryDeleteDir(venvPath)) {
             traceInfo(`Deleted ".venv" dir: ${venvPath}`);
             return true;
@@ -72,11 +72,11 @@ export async function deleteEnvironmentWindows(
         showErrorMessageWithLogs(CreateEnv.Venv.errorDeletingEnvironment);
         return false;
     }
-    traceError(`Failed to delete python executable: ${venvPythonPath}`);
+    traceError(`Failed to delete Python executable: ${venvPythonPath}`);
     traceError('This happens if the virtual environment is still in use.');
 
     if (interpreter) {
-        traceError('We will attempt to switch python temporarily to delete the ".venv"');
+        traceError('We will attempt to switch Python temporarily to delete the ".venv"');
 
         await switchSelectedPython(interpreter, workspaceFolder.uri, 'temporarily to delete the ".venv"');
 

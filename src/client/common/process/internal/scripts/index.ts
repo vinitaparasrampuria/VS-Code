@@ -48,7 +48,7 @@ export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJs
         try {
             return JSON.parse(out);
         } catch (ex) {
-            throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
+            throw Error(`Python ${args} returned bad JSON (${out}) (${ex})`);
         }
     }
 

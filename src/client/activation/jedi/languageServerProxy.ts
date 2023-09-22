@@ -59,7 +59,7 @@ export class JediLanguageServerProxy implements ILanguageServerProxy {
             this.languageClient = client;
         } catch (ex) {
             traceError('Failed to start language server:', ex);
-            throw new Error('Launching Jedi language server using python failed, see output.');
+            throw new Error('Launching Jedi language server using Python failed, see output.');
         }
     }
 

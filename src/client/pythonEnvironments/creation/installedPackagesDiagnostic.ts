@@ -22,14 +22,14 @@ async function setContextForActiveEditor(diagnosticCollection: DiagnosticCollect
     if (doc && (doc.languageId === 'pip-requirements' || doc.fileName.endsWith('pyproject.toml'))) {
         const diagnostics = diagnosticCollection.get(doc.uri);
         if (diagnostics && diagnostics.length > 0) {
-            traceVerbose(`Setting context for python dependencies not installed: ${doc.uri.fsPath}`);
+            traceVerbose(`Setting context for Python dependencies not installed: ${doc.uri.fsPath}`);
             await executeCommand('setContext', DEPS_NOT_INSTALLED_KEY, true);
             return;
         }
     }
 
     // undefined here in the logs means no file was selected
-    traceVerbose(`Clearing context for python dependencies not installed: ${doc?.uri.fsPath}`);
+    traceVerbose(`Clearing context for Python dependencies not installed: ${doc?.uri.fsPath}`);
     await executeCommand('setContext', DEPS_NOT_INSTALLED_KEY, false);
 }
 

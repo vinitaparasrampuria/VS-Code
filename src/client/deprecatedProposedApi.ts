@@ -75,7 +75,7 @@ export function buildDeprecatedProposedApi(
                 traceVerbose(`Extension ${info.extensionId} accessed ${apiName}`);
                 if (warnLog && !warningLogged.has(info.extensionId)) {
                     console.warn(
-                        `${info.extensionId} extension is using deprecated python APIs which will be removed soon.`,
+                        `${info.extensionId} extension is using deprecated Python APIs which will be removed soon.`,
                     );
                     warningLogged.add(info.extensionId);
                 }

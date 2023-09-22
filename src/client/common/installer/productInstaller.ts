@@ -410,7 +410,7 @@ export class PythonInstaller implements IBaseInstaller {
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean> {
         if (product !== Product.python) {
-            throw new Error(`${product} cannot be installed via conda python installer`);
+            throw new Error(`${product} cannot be installed via conda Python installer`);
         }
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const environment = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
@@ -434,13 +434,13 @@ export class PythonInstaller implements IBaseInstaller {
         _flags?: ModuleInstallFlags,
     ): Promise<InstallerResponse> {
         if (product !== Product.python) {
-            throw new Error(`${product} cannot be installed via python installer`);
+            throw new Error(`${product} cannot be installed via Python installer`);
         }
         // Active interpreter is a conda environment which does not contain python, hence install it.
         const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const condaInstaller = installers.find((installer) => installer.type === ModuleInstallerType.Conda);
         if (!condaInstaller || !(await condaInstaller.isSupported(resource))) {
-            traceError('Conda installer not available for installing python in the given environment');
+            traceError('Conda installer not available for installing Python in the given environment');
             return InstallerResponse.Ignore;
         }
         const moduleName = translateProductToModule(product);

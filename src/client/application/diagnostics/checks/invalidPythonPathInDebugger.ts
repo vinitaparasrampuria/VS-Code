@@ -104,7 +104,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                     resource,
                 ),
             ])
-                .catch((ex) => traceError('Failed to handle invalid python path in launch.json debugger', ex))
+                .catch((ex) => traceError('Failed to handle invalid Python path in launch.json debugger', ex))
                 .ignoreErrors();
         } else {
             this.handle([
@@ -113,7 +113,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                     resource,
                 ),
             ])
-                .catch((ex) => traceError('Failed to handle invalid python path in settings.json debugger', ex))
+                .catch((ex) => traceError('Failed to handle invalid Python path in settings.json debugger', ex))
                 .ignoreErrors();
         }
         return false;

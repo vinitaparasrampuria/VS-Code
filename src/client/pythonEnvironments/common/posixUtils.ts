@@ -118,7 +118,7 @@ export async function getPythonBinFromPosixPaths(searchDirs: string[]): Promise<
     const binToLinkMap = new Map<string, string[]>();
     for (const searchDir of searchDirs) {
         const paths = await findPythonBinariesInDir(searchDir).catch((ex) => {
-            traceWarn('Looking for python binaries within', searchDir, 'failed with', ex);
+            traceWarn('Looking for Python binaries within', searchDir, 'failed with', ex);
             return [];
         });
 
